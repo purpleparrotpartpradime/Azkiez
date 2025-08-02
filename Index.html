@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Azkiez Translator with Real Font</title>
+  <style>
+    @font-face {
+      font-family: 'Azkiez';
+      src: url('https://raw.githubusercontent.com/purpleparrotpartpradime/Azkiez/main/As-r2.ttf') format('truetype');
+    }
+
+    body {
+      background-color: #000;
+      color: #0af;
+      font-family: 'Courier New', monospace;
+      margin: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #09f;
+      margin-bottom: 1rem;
+    }
+
+    .container {
+      display: flex;
+      gap: 2rem;
+      width: 90vw;
+      max-width: 900px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 250px;
+      background-color: #111;
+      color: #0af;
+      border: 2px solid #0099ff;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      padding: 1rem;
+      resize: none;
+      outline: none;
+    }
+
+    .box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    button, label {
+      margin-top: 0.75rem;
+      padding: 0.6rem 1rem;
+      background-color: #0099ff;
+      border: none;
+      border-radius: 6px;
+      color: #001122;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+
+    button:hover {
+      background-color: #005f99;
+      color: #aaf;
+    }
+
+    label {
+      cursor: pointer;
+      margin-top: 0;
+      text-align: center;
+    }
+
+    #modeToggleContainer {
+      margin-bottom: 1rem;
+      color: #0af;
+      font-size: 1.1rem;
+    }
+
+    input[type="checkbox"] {
+      transform: scale(1.5);
+      margin-left: 0.5rem;
+      cursor: pointer;
+    }
+
+    #azkiezOutput {
+      font-family: 'Azkiez', monospace;
+      font-size: 1.5rem;
+      color: #0ff;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Azkiez ⇄ English Translator (Real Font Loaded)</h1>
+
+<div id="modeToggleContainer">
+  <label>
+    Azkiez Spelling Mode (G → J substitution)
+    <input type="checkbox" id="modeToggle" />
+  </label>
+</div>
+
+<div class="container">
+  <div class="box">
+    <label for="englishInput">English Input</label>
+    <textarea id="englishInput" placeholder="Type English here..."></textarea>
+    <button onclick="speakText('englishInput')">Speak English</button>
+  </div>
+  <div class="box">
+    <label for="azkiezOutput">Azkiez Output</label>
+    <textarea id="azkiezOutput" placeholder="Azkiez output..." readonly></textarea>
+    <button onclick="speakText('azkiezOutput')">Speak Azkiez</button>
+  </div>
+</div>
+
+<script>
+  const azkiezMap = {
+    a: "⟁", b: "◈", c: "◇", d: "△", e: "▣", f: "▰",
+    j: "⬟", k: "⬢", l: "⬠", m: "⬡", n: "⧫", o: "○",
+    p: "●", q: "◎", r: "▮", s: "▱", t: "▲", u: "◉",
+    v: "⬤", w: "⬥", x: "⬧", y: "⬨", z: "⬩",
+    extra1: "⟟", extra2: "⟡",
+    " ": " ",
+  };
+
+  const azkiezPronunciations = {
+    "⟁": "Ai", "◈": "Vah", "◇": "Nah", "△": "Thu", "▣": "Kri", "▰": "Sha",
+    "⬟": "Zan", "⬢": "Fel", "⬠": "Dur", "⬡": "Zen", "⧫": "Mor", "○": "Bel",
+    "●": "Xir", "◎": "Rin", "▮": "Vil", "▱": "Sel", "▲": "Tor", "◉": "Lin",
+    "⬤": "Jin", "⬥": "Kel", "⬧": "Vor", "⬨": "Nal", "⬩": "Pir",
+    "⟟": "Qel", "⟡": "Xal", " ": " "
+  };
+
+  const specialWords = {
+    "job": "employment",
+    "kitty": "cat"
+  };
+
+  function normalizeEnglish(text) {
+    return text.toLowerCase().split(/\b/).map(word => {
+      return specialWords[word] || word;
+    }).join("");
+  }
+
+  const englishInput = document.getElementById("englishInput");
+  const azkiezOutput = document.getElementById("azkiezOutput");
+  const modeToggle = document.getElementById("modeToggle");
+
+  function translateToAzkiez(text, spellingMode) {
+    text = normalizeEnglish(text);
+    if (spellingMode) {
+      text = text.replace(/g/g, 'j');
+    }
+    return text.split("").map(ch => azkiezMap[ch] || ch).join("");
+  }
+
+  function azkiezToPhonetic(text) {
+    return text.split("").map(ch => azkiezPronunciations[ch] || ch).join(" ");
+  }
+
+  function updateTranslation() {
+    const spellingMode = modeToggle.checked;
+    azkiezOutput.value = translateToAzkiez(englishInput.value, spellingMode);
+  }
+
+  englishInput.addEventListener("input", updateTranslation);
+  modeToggle.addEventListener("change", updateTranslation);
+
+  function speakText(id) {
+    const text = document.getElementById(id).value.trim();
+    if (!text) return alert("Please enter some text to speak.");
+    let utterance;
+    if (id === "azkiezOutput") {
+      utterance = new SpeechSynthesisUtterance(azkiezToPhonetic(text));
+    } else {
+      utterance = new SpeechSynthesisUtterance(text);
+    }
+    utterance.lang = "en-US";
+    window.speechSynthesis.speak(utterance);
+  }
+
+  updateTranslation();
+</script>
+
+</body>
+</html>
